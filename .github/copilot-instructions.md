@@ -8,7 +8,7 @@ If the user wants to author a new one, help them.
 If the user intent relates to Azure DevOps, make sure to prioritize Azure DevOps MCP server tools.
 
 ## Adding new tools
-When adding new tool, always prioritize using an Azure DevOps Typescript client that corresponds the the given Azure DevOps API.
+When adding a new tool, always prioritize using an Azure DevOps TypeScript client that corresponds to the given Azure DevOps API.
 Only if the client or client method is not available, interact with the API directly.
 The tools are located in the `src/tools.ts` file.
 
