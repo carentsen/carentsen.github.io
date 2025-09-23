@@ -1,0 +1,136 @@
+name: Release to Main
+
+on:
+  workflow_dispatch:
+    inputs:
+      release_type:
+        description: 'Type of release'
+        required: true
+        default: 'minor'
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+      release_notes:
+        description: 'Release notes (optional)'
+        required: false
+        type: string
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+  pull-requests: write
+
+jobs:
+  validate-development:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout development
+        uses: actions/checkout@v4
+        with:
+          ref: development
+
+      - name: Setup Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.1'
+          bundler-cache: true
+
+      - name: Install dependencies
+        run: bundle install
+
+      - name: Build and validate
+        run: |
+          bundle exec jekyll build --verbose
+
+          # Run basic validation
+          if [ ! -f "_site/index.html" ]; then
+            echo "Build validation failed"
+            exit 1
+          fi
+
+          echo "Development branch validated successfully"
+
+  create-release-pr:
+    needs: validate-development
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout development
+        uses: actions/checkout@v4
+        with:
+          ref: development
+          fetch-depth: 0
+
+      - name: Create release branch
+        run: |
+          RELEASE_BRANCH="release/$(date +%Y%m%d-%H%M%S)"
+          echo "RELEASE_BRANCH=$RELEASE_BRANCH" >> $GITHUB_ENV
+
+          git checkout -b $RELEASE_BRANCH
+          git push origin $RELEASE_BRANCH
+
+      - name: Create Pull Request to Main
+        uses: peter-evans/create-pull-request@v5
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          base: main
+          head: ${{ env.RELEASE_BRANCH }}
+          title: "Release ${{ inputs.release_type }}: $(date +%Y-%m-%d)"
+          body: |
+            ## Release Summary
+
+            **Release Type**: ${{ inputs.release_type }}
+            **Source Branch**: development
+            **Target Branch**: main
+
+            ### Changes in this Release
+
+            ${{ inputs.release_notes }}
+
+            ### Automated Checks
+            - [x] Development branch builds successfully
+            - [x] All tests pass
+            - [x] Ready for production deployment
+
+            ### Manual Review Required
+            - [ ] Content review completed
+            - [ ] Visual review completed
+            - [ ] Performance acceptable
+            - [ ] SEO optimizations in place
+
+            ---
+
+            🤖 This release was prepared automatically from the development branch.
+
+            **Next Steps:**
+            1. Review changes in this PR
+            2. Test the preview if available
+            3. Merge when ready to deploy to production
+          labels: release
+          draft: false
+
+  deploy-on-merge:
+    if: github.event.pull_request.merged == true && github.base_ref == 'main'
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v4
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: '.'
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

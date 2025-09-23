@@ -1,0 +1,85 @@
+name: Development Branch CI
+
+on:
+  push:
+    branches:
+      - development
+  pull_request:
+    branches:
+      - development
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+  pull-requests: write
+
+concurrency:
+  group: "dev-${{ github.ref }}"
+  cancel-in-progress: true
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.1'
+          bundler-cache: true
+
+      - name: Install dependencies
+        run: bundle install
+
+      - name: Build Jekyll site
+        run: bundle exec jekyll build --verbose
+        env:
+          JEKYLL_ENV: development
+
+      - name: Test site build
+        run: |
+          # Check that site was built successfully
+          if [ ! -d "_site" ]; then
+            echo "Site build failed - _site directory not found"
+            exit 1
+          fi
+
+          # Check for basic files
+          if [ ! -f "_site/index.html" ]; then
+            echo "Index file not generated"
+            exit 1
+          fi
+
+          echo "Site built successfully"
+
+      - name: Upload build artifact
+        if: github.event_name == 'push'
+        uses: actions/upload-artifact@v4
+        with:
+          name: development-site
+          path: _site/
+          retention-days: 7
+
+  deploy-preview:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/development'
+    needs: build-and-test
+    environment:
+      name: development-preview
+      url: https://carentsen.github.io/development/
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download build artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: development-site
+          path: _site/
+
+      - name: Deploy to development preview
+        run: |
+          echo "Development preview would be deployed here"
+          echo "Consider using GitHub Pages with a development subdirectory"
+          echo "Or a staging service like Netlify Deploy Previews"
