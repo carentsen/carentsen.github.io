@@ -1,12 +1,12 @@
-# GitHub Ruleset for main and dev branches
-# Enforces code review best practices, but allows repository owner to merge their own changes if needed
+# GitHub Ruleset for AI-driven development workflow
+# Enforces proper branching strategy with development -> main releases
 
 rules:
-  - name: Require code review for main and dev
+  # Strict protection for main branch - no direct commits
+  - name: Protect main branch - PR only
     conditions:
       branch:
         - main
-        - dev
     enforcement: true
     rules:
       pull_request:
@@ -16,8 +16,29 @@ rules:
         require_review_request: true
         restrict_merges_to_admins: false
         allow_owner_to_merge: true
-        require_status_checks: false
+        require_status_checks: true
         require_conversation_resolution: true
+        require_linear_history: true
+        block_force_pushes: true
+        block_deletions: true
+        restrict_pushes: true  # Block all direct pushes
+
+  # Development branch - AI agents can work here via PRs
+  - name: Development branch workflow
+    conditions:
+      branch:
+        - development
+    enforcement: true
+    rules:
+      pull_request:
+        required_approving_review_count: 1
+        dismiss_stale_reviews: true
+        require_code_owner_reviews: false
+        require_review_request: false  # AI can create PRs without explicit requests
+        restrict_merges_to_admins: false
+        allow_owner_to_merge: true
+        require_status_checks: false
+        require_conversation_resolution: false  # Allow faster iteration
         require_linear_history: true
         block_force_pushes: true
         block_deletions: true
