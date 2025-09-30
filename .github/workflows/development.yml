@@ -69,7 +69,6 @@ jobs:
     needs: build-and-test
     environment:
       name: development-preview
-      url: https://carentsen.github.io/development/
     runs-on: ubuntu-latest
     steps:
       - name: Download build artifact

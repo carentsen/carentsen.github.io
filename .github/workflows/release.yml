@@ -71,13 +71,16 @@ jobs:
           git checkout -b $RELEASE_BRANCH
           git push origin $RELEASE_BRANCH
 
+      - name: Set release date
+        run: echo "RELEASE_DATE=$(date +%Y-%m-%d)" >> $GITHUB_ENV
+
       - name: Create Pull Request to Main
         uses: peter-evans/create-pull-request@v5
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           base: main
           head: ${{ env.RELEASE_BRANCH }}
-          title: "Release ${{ inputs.release_type }}: $(date +%Y-%m-%d)"
+          title: "Release ${{ inputs.release_type }}: ${{ env.RELEASE_DATE }}"
           body: |
             ## Release Summary
 
@@ -110,27 +113,3 @@ jobs:
             3. Merge when ready to deploy to production
           labels: release
           draft: false
-
-  deploy-on-merge:
-    if: github.event.pull_request.merged == true && github.base_ref == 'main'
-    runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          ref: main
-
-      - name: Setup Pages
-        uses: actions/configure-pages@v4
-
-      - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: '.'
-
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4

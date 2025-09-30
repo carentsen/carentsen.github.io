@@ -21,7 +21,6 @@ rules:
         require_linear_history: true
         block_force_pushes: true
         block_deletions: true
-        restrict_pushes: true  # Block all direct pushes
 
   # Development branch - AI agents can work here via PRs
   - name: Development branch workflow
