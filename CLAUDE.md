@@ -24,23 +24,29 @@ This is a Jekyll-based GitHub Pages website for Christian Arentsen's personal si
 
 ## AI Management Commands
 
-### Content Creation
+### Development Workflow
 ```bash
-# Create new blog post
-bundle exec jekyll post "Post Title"
+# Start new feature from development branch
+git checkout development && git pull origin development
+git checkout -b feature/descriptive-name
 
-# Serve locally for testing
+# Local development and testing
 bundle exec jekyll serve
 
-# Build site
-bundle exec jekyll build
+# Create PR to development branch
+gh pr create --base development --title "..." --body "..."
 ```
 
-### Common Tasks
-- **New Blog Post**: Create in `_posts/` with format `YYYY-MM-DD-title.markdown`
-- **Update About**: Edit `about.markdown`
-- **Modify Config**: Edit `_config.yml`
-- **Add Pages**: Create `.markdown` files in root directory
+### Content Creation
+- **New Blog Post**: Use template from `copilot/templates/blog-post-template.md`
+- **Update About**: Edit `about.markdown` via feature branch
+- **Add Pages**: Use `copilot/templates/page-template.md`
+- **Project Showcase**: Use `copilot/templates/project-showcase-template.md`
+
+### Branching Strategy
+- **main**: Production (protected, no direct commits)
+- **development**: Integration branch (AI work via PRs)
+- **feature/***: AI creates for each task
 
 ## File Structure
 
@@ -76,9 +82,10 @@ bundle exec jekyll build
 
 ## Deployment
 
-- **Automatic**: Pushes to `main` branch trigger GitHub Actions deployment
-- **Manual**: Can be triggered via GitHub Actions web interface
-- **URL**: Changes go live at https://carentsen.github.io/
+- **Development**: PRs to development trigger CI builds and testing
+- **Production**: Manual release workflow creates PR from development to main
+- **Release Process**: Human-controlled via GitHub Actions "Release to Main" workflow
+- **URL**: Production changes go live at https://carentsen.github.io/ after main deployment
 
 ## Repository Rules
 
@@ -93,20 +100,19 @@ All AI-specific context, templates, and instructions are stored in the `copilot/
 
 ## Quick Reference
 
-### Creating Content
-1. **Blog Post**: Add to `_posts/` with proper naming and front matter
-2. **Page**: Add `.markdown` file to root with front matter
-3. **Update About**: Edit `about.markdown`
+### AI Workflow (Development Branch)
+1. **Create Feature Branch**: `git checkout -b feature/task-name` from development
+2. **Make Changes**: Use templates and follow guidelines
+3. **Test Locally**: `bundle exec jekyll serve` at http://localhost:4000
+4. **Create PR**: `gh pr create --base development` with detailed description
+5. **Review & Merge**: Human or AI approval merges to development
 
-### Testing Changes
-1. Run `bundle exec jekyll serve` locally
-2. View at http://localhost:4000
-3. Make changes and test before pushing
-
-### Deployment
-1. Push to `main` branch
-2. GitHub Actions automatically builds and deploys
-3. Changes live at https://carentsen.github.io/
+### Release to Production (Human-Controlled)
+1. **Trigger Release**: Use GitHub Actions "Release to Main" workflow
+2. **Choose Release Type**: patch, minor, or major
+3. **Add Release Notes**: Describe changes in the release
+4. **Review PR**: Automated PR from development to main
+5. **Merge**: Human approval deploys to https://carentsen.github.io/
 
 ---
 
